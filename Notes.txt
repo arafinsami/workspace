@@ -1,0 +1,484 @@
+1. First install kubectl
+   -- kubectl version --output=yaml
+   -- kubectl version --output=json
+2. install kind
+     -- kind version
+     -- creating cluster: 
+        -- https://kind.sigs.k8s.io/docs/user/quick-start/
+        -- check if the cluster is exist : docker ps -a
+        -- docker stop container_id
+        -- to clean everything: docker system prune -f
+        -- check what network available: sudo docker network ls
+        -- kind create cluster --config 01-cluster.yaml
+        -- docker ps -a
+        -- docker network ls
+        --  go home directory and write: cat ~/.kube/config
+        -- kubectl version --output=json
+        -- kubectl get nodes
+        -- now to know inside on master node: docker exec -it container_id bash
+        -- cd /etc/kubernetes/manifests/  so that we can see four files:
+           1. etcd.yaml  2. kube-apiserver.yaml	3. kube-controller-manager.yaml  4. kube-scheduler.yaml
+           -- to see all running process: ps -aux
+        -- kind delete cluster --name dev-cluster
+
+
+POD:
+
+-- pod is basic building block to create a workload
+-- watch -t -x kubectl get pod
+-- kubectl create -f 01-simple-pod.yaml
+-- kubectl delete -f 01-simple-pod.yaml
+-- kubectl describe pod
+-- kubectl apply -f 01-simple-pod.yaml ( to update the pod)
+-- kubectl get pod pod-1(pod name), kubectl describe pod pod-1(pod name), kubectl get pod --show-labels, kubectl get pod -l department=department-1 (comes with label name), kubectl get pod -l department=department-1,team=team-1(comes with label name)
+-- kubectl get pod -o wide
+-- kubectl get pod pod-1 -o yaml(get out put as yaml format)
+-- kubectl port-forwarding pod-1(pod name) 80:80
+
+
+1. simple pod creation:
+-- do some docker commands:
+   -- docker ps -a
+   -- docker system prune -f
+   -- docker network ls
+-- create k8s cluster:
+   -- kind create cluster --config 01-cluster.yaml (cluster file name)
+   -- cat ~/.kube/config
+   -- kubectl version --output=json / kubectl version --output=yaml
+   -- kubectl get nodes
+   -- docker ps -a
+   -- docker exec -it container_id bash (to know inside on master node)
+      -- cd /etc/kubernetes/manifests/ to see the lists of files:
+         -- etcd.yaml
+         -- kube-apiserver.yaml
+         -- kube-controller-manager.yaml
+         -- kube-scheduler.yaml
+-- create pod:
+   -- kubectl create -f 01-simple-pod.yaml (file name)
+   -- watch -t -x kubectl get pod
+   -- kubectl describe pod
+
+
+
+2. Multiple pod creation
+-- do some docker commands:
+   -- docker ps -a
+   -- docker system prune -f
+   -- docker network ls
+-- create k8s cluster:
+   -- kind create cluster --config 01-cluster.yaml (cluster file name)
+   -- cat ~/.kube/config
+   -- kubectl version --output=json / kubectl version --output=yaml
+   -- kubectl get nodes
+   -- docker ps -a
+   -- docker exec -it container_id bash (to know inside on master node)
+      -- cd /etc/kubernetes/manifests/ to see the lists of files:
+         -- etcd.yaml
+         -- kube-apiserver.yaml
+         -- kube-controller-manager.yaml
+         -- kube-scheduler.yaml
+-- create pod:
+   -- kubectl create -f 02-multiple-pod.yaml (file name)
+   -- watch -t -x kubectl get pod
+   -- descripe pod (query)
+      -- kubectl describe pod (very confusing, because all pod info will come)
+      -- kubectl get pod (all pod status will come)
+      -- kubectl get pod --show-labels (show all pod with pod labels)
+      -- kubectl get pod my-pod-1 (we are calling by pod name to know perticular pod status)
+      -- kubectl describe pod my-pod-1( query using pod name)
+      -- kubectl get pod -l department=department-1 (getting specific pod by it's labels)
+      -- kubectl get pod -l team=team-1 (getting specific pod by it's labels)
+      -- kubectl get pod -l team!=team-1 (getting lists of pods not from team-1  by labels)
+      -- kubectl get pod -l department=department-1,team=team-1  (query to find a pod using and oprator)
+      -- kubectl get pod -o wide (to get info which pod is running for which node)
+      -- kubectl get pod my-pod-1 -o yaml (to get pod info or config as yaml format)
+      -- kubectl get pod my-pod-1 -o json (to get pod info or config as json format)
+      -- kubectl delete pod my-pod-1 ( to delete specific pod)
+      -- kubectl delete -f 02-multiple-pod.yaml (deleting all pods)
+      -- docker stop container_id
+      -- docker ps -a
+      -- docker system prune -f
+      -- docker network ls
+
+
+3. Port forwarding:
+-- do some docker commands:
+   -- docker ps -a
+   -- docker system prune -f
+   -- docker network ls
+-- create k8s cluster:
+   -- kind create cluster --config 01-cluster.yaml (cluster file name)
+   -- cat ~/.kube/config
+   -- kubectl version --output=json / kubectl version --output=yaml
+   -- kubectl get nodes
+   -- docker ps -a
+   -- docker exec -it container_id bash (to know inside on master node)
+      -- cd /etc/kubernetes/manifests/ to see the lists of files:
+         -- etcd.yaml
+         -- kube-apiserver.yaml
+         -- kube-controller-manager.yaml
+         -- kube-scheduler.yaml
+-- create pod:
+   -- kubectl create -f 03-pod-port-forwarding.yaml (file name)
+   -- watch -t -x kubectl get pod
+   -- kubectl describe pod
+   -- kubectl port-forward my-pod 8080:80
+
+4. Pod args:
+   -- docker run ubuntu
+   -- docker run ubuntu date
+   -- docker run ubuntu ls
+   -- kubectl create -f 05-pod-args.yaml
+   -- kubectl get pod my-pod
+   -- kubectl logs my-pod
+
+5. Pod shell args:
+   -- docker run -it ubuntu (running as interective mode)
+   -- date
+   -- echo this is my path: $PATH
+   -- /bin/sh -c 'echo this is my path: $PATH'
+   -- now create pod in k8s cluster
+      -- kubectl create -f 06-pod-shell.yaml
+      -- kubectl get pod my-pod
+      -- kubectl logs my-pod
+
+6. Pod termination grace period:
+   -- create pod in k8s cluster
+      -- kubectl create -f 07-pod-termination-grace-period.yaml
+      -- kubectl delete -f 07-pod-termination-grace-period.yaml, it will takes 30 seconds, it will goes sleep for 30 seconds and status showing Terminating
+
+
+7. Pod command: If we want to override the entrypoint, we can use command in k8s
+   -- create pod in k8s cluster
+   -- docker run vinsdocker/k8s-entrypoint, we will get some message
+   -- if we want to override this message as docker run vinsdocker/k8s-entrypoint date, we do not get output
+   -- we can do it using k8s command to chage the existing message as:
+      -- kubectl create -f 08-pod-command.yaml
+      -- kubectl get pod my-pod
+      -- kubectl logs my-pod : we will override the message and we will get date instead of docker container message
+
+
+8. Pod pass env variables:
+   -- create pod in k8s cluster
+   -- docker run vinsdocker/k8s-entrypoint, we will get some message
+   -- if we want to override this message as docker run vinsdocker/k8s-entrypoint date, we do not get output
+   -- we can do it using k8s command to chage the existing message as:
+      -- kubectl create -f 08-pod-command.yaml
+      -- kubectl get pod my-pod
+      -- kubectl logs my-pod : we will override the message and we will get date instead of docker container message
+
+09-pod-pass-env-variables.yaml
+   -- create pod in k8s cluster
+   -- kubectl create -f 09-pod-pass-env-variables.yaml
+   -- kubectl get pod my-pod
+   -- kubectl logs my-pod
+      -- we will get following as output:
+         PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+         HOSTNAME=my-pod
+         reuqest.timeout=10ms
+         spring.profiles.active=dev
+         KUBERNETES_PORT_443_TCP_PORT=443
+         KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+         KUBERNETES_SERVICE_HOST=10.96.0.1
+         KUBERNETES_SERVICE_PORT=443
+         KUBERNETES_SERVICE_PORT_HTTPS=443
+         KUBERNETES_PORT=tcp://10.96.0.1:443
+         KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+         KUBERNETES_PORT_443_TCP_PROTO=tcp
+         HOME=/root
+
+10. Exploring pod:
+    -- create pod in k8s cluster
+    -- kubectl create -f 01-simple-pod.yaml
+    -- kubectl get pod my-pod
+    -- kubectl exec -it my-pod bash / kubectl exec -it my-pod -- bash
+    -- ls
+    -- curl localhost
+    -- to exit: write exit command
+
+
+11. Pod Multiple
+    -- create pod in k8s cluster
+    -- kubectl create -f 10-pod-multiple-containers-1.yaml
+    -- kubectl logs my-pod
+    -- kubectl logs my-pod -c nginx
+    -- kubectl logs my-pod -c tomcat
+    -- kubectl describe pod
+    -- kubectl describe pod my-pod
+    -- kubectl describe -f 10-pod-multiple-containers-1.yaml
+    -- kubectl get ev |grep my-pod|grep nginx
+    -- kubectl get ev |grep my-pod|grep tomcat
+    -- kubectl get pod my-pod -o yaml
+    -- kubectl get pod my-pod -o json
+
+
+12. Pod Assignment
+    -- kind create cluster --config 01-cluster.yaml
+    -- kubectl create -f 11-pod-assignment.yaml
+    -- kubectl describe pod
+    -- kubectl logs my-pod
+       -- we will get following error. We need to fix the error
+          -- output as:
+             -- You need to do the followings to make this work
+                  -- Set an environment variable 'NUMBER' with the value 5
+                  -- Pass the arg 'MY_ARG'
+
+    -- kubectl delete -f 11-pod-assignment.yaml
+    -- kubectl create -f 12-pod-assignment-solution.yaml
+    -- kubectl describe pod
+    -- kubectl logs pod-assignment
+
+
+13. ReplicaSet:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 13-simple-rs.yaml 
+    -- kubectl get all
+    -- kubectl get pod --show-labels
+    -- kubectl delete pod/my-rs-xnkws(so another pod will be created immediately by ReplicaSet)
+    -- kubectl delete pod --all(all pods will be deleted and all pods will be created immediately by ReplicaSet)
+
+14. ReplicaSet-Multiple Pod labels:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 14-simple-rs-pod-multiple-labels.yaml 
+    -- kubectl get all
+    -- kubectl get pod --show-labels
+    -- kubectl delete pod/my-rs-xnkws(so another pod will be created immediately by ReplicaSet)
+    -- kubectl delete pod --all(all pods will be deleted and all pods will be created immediately by ReplicaSet)
+
+
+15. RS with multiple pods with samle labels:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 15-2-rs-existing-multiple-pod.yaml
+       -- 3 pods will be created
+    -- kubectl create -f 15-1-existing-pod-makager.yaml
+       -- it will terminate 1 pod and 2 pods will run
+
+15. Multiple RS:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 16-multiple-rs.yaml
+
+16. Describe rs:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 16-multiple-rs.yaml
+    -- My current pods are running as :
+         my-rs-1-8snfk   1/1     Running   0          2m21s
+         my-rs-1-sgtxv   1/1     Running   0          2m21s
+         my-rs-2-fb5rd   1/1     Running   0          2m21s
+         my-rs-2-j7qvk   1/1     Running   0          2m21s
+         -- we can also describe each of pod as follows:
+            -- kubectl describe pod my-rs-1-8snfk
+            -- kubectl describe pod my-rs-1-sgtxv
+            -- kubectl describe pod my-rs-2-fb5rd
+            -- kubectl describe pod my-rs-2-j7qvk
+    -- kubectl describe rs/my-rs-1
+    -- kubectl describe rs/my-rs-2
+
+17. Deployment:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 17-simple-deployment.yaml
+    -- kubectl get deploy
+    -- kubectl delete -f 17-simple-deployment.yaml
+    -- kubectl get all
+    -- kubectl apply -f 17-simple-deployment.yaml
+    -- kubectl get all
+    -- kubectl apply -f 17-simple-deployment.yaml ( if we do this command instead of create command, we will not get error)
+    -- some kubectl effective commands:
+       -- kubectl get all
+       -- kubectl describe deploy
+       -- kubectl logs deploy/my-deployment
+       -- kubectl exec -it deploy/my-deployment -- bash (it automatically goes inside the pod)
+       -- kubectl port-forward deploy/my-deployment 8080:80
+
+18. More deployment:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get pod
+      -- kubectl apply -f 18-deployment-rs.yaml
+         -- we can see three replicas will be created:
+            order-service-deployment-8577ccf6b5-76nxm   1/1     Running   0          2m3s
+            order-service-deployment-8577ccf6b5-9sqzg   1/1     Running   0          2m3s
+            order-service-deployment-8577ccf6b5-xs2js   1/1     Running   0          2m3s
+         -- now if we chnage number of replicas from 3 to 4 and we will write apply command instead of create command, now can obserb:
+         -- kubectl apply -f 18-deployment-rs.yaml
+            order-service-deployment-8577ccf6b5-5pngg   1/1     Running   0          6s
+            order-service-deployment-8577ccf6b5-76nxm   1/1     Running   0          3m
+            order-service-deployment-8577ccf6b5-9sqzg   1/1     Running   0          3m
+            order-service-deployment-8577ccf6b5-xs2js   1/1     Running   0          3m
+      -- kubectl get deploy
+      -- If we change the number of replicas, it will not create new revission means new replicas. But if we chnage something on pod template,
+         it will create new revission means new replica set.
+      
+
+19. Roll out:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get pod
+      -- kubectl apply -f 19-deployment-rollout.yaml
+      -- kubectl port-forward deploy/order-service-deployment 8080:80
+      -- now change the image version from image: vinsdocker/k8s-app:v1  to image: vinsdocker/k8s-app:v2
+         -- kubectl apply -f 19-deployment-rollout.yaml
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+         -- kubectl rollout history deploy
+            -- out put will be:
+
+               REVISION  CHANGE-CAUSE
+               1         <none>
+               2         <none>
+
+      -- now change the image version from image: vinsdocker/k8s-app:v2  to image: vinsdocker/k8s-app:v3
+         -- kubectl apply -f 19-deployment-rollout.yaml
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+         -- kubectl rollout history deploy:
+            REVISION  CHANGE-CAUSE
+            1         <none>
+            2         <none>
+            3         <none>
+            -- now out current version is v3. If we want to rollout from v3 to v2:
+               -- kubectl rollout undo deploy/order-service-deployment
+               -- kubectl port-forward deploy/order-service-deployment 8080:80 and do the same thing again to check what is happening:
+                  it is now went to v3, we are not able to go out desired version.
+
+
+20. Roll back:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- doing this for v1:
+         -- kubectl apply -f 20-deployment-rollback.yaml
+         -- kubectl rollout history deploy
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+      -- doing this for v2:
+         -- kubectl apply -f 20-deployment-rollback.yaml
+         -- kubectl rollout history deploy
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+      -- doing this for v3:
+         -- kubectl apply -f 20-deployment-rollback.yaml
+         -- kubectl rollout history deploy
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+
+      -- kubectl rollout history deploy:
+         REVISION  CHANGE-CAUSE
+         1         deploying v1
+         2         deploying v2
+         3         deploying v3
+         -- here current revision is 3, if we want to go revision 1, 
+            -- kubectl rollout undo deploy/order-service-deployment --to-revision=1
+            -- if we run command again for -- kubectl rollout history deploy:
+               REVISION  CHANGE-CAUSE
+               2         deploying v2
+               3         deploying v3
+               4         deploying v1
+               -- now the current revision version is 4 which is version v1
+
+      -- to know more about roll out history:
+         -- kubectl rollout history deploy:
+            REVISION  CHANGE-CAUSE
+            3         deploying v3
+            4         deploying v1
+            5         deploying v2
+            -- kubectl rollout history deploy --revision=5
+
+
+21. Min ready deployment:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 21-min-ready-deployment.yaml
+
+22. Deployment recreate:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- we added some properties for Recreate as :
+          minReadySeconds: 10
+          strategy:
+            type: Recreate
+      -- kubectl apply -f 22-deployment-recreate.yaml
+      -- if do some changes after first department, it will not create any new pod
+
+23. Deployment max surge:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- we added some properties for Recreate as :
+          strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: "100%"
+      -- kubectl apply -f 23-deployment-max-surge.yaml
+      -- purpose of max surge, it will create duplicate pods and eventually remove the old pods
+
+
+24. Deployment max surge:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- we added some properties for Recreate as :
+          strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 0
+            maxUnavailable: 1
+      -- kubectl apply -f 24-deployment-max-unavailabe.yaml
+
+25. Simple Service:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 1-simple-service.yaml
+      -- kubectl apply -f 17-simple-deployment.yaml
+      -- kubectl describe service or svc nginx
+      -- kubectl get pod -o wide
+      -- watch -t -x kubectl describe svc  nginx
+      -- kubectl delete -f 17-simple-deployment.yaml
+      -- kubectl delete -f 1-simple-service.yaml
+
+25. Service: load balancing
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 2-loadbalancing-service.yaml
+      -- kubectl exec -it demo-pod -- bash
+      -- curl my-app(service name)
+      -- we can see that load balancing works
+
+26. Service: Node Port
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 3-nodeport-service.yaml
+
+26. Service: Rolling update
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 18-service-rollingupdate.yaml
+      -- kubectl exec -it demo-pod -- bash
+      -- curl order-service
+      -- for i in {1..1000}; do curl -s http://order-service | grep -o "<title>[^<]*" | tail -c+8; done
+      -- now we are going to change image: vinsdocker/k8s-app:v1 to image: vinsdocker/k8s-app:v2 and 
+      -- kubectl apply -f 18-service-rollingupdate.yaml
+
+27. Namespace
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl get namespace / kubectl get ns
+      -- kubectl create ns dev
+      -- kubectl create ns qa
+      -- kubectl get pod -n dev / qa
+      -- kubectl apply -f 3-nodeport-service.yaml -n dev (creating resources in dev namespace)
+      -- kubectl apply -f 3-nodeport-service.yaml -n qa (creating resources in qa namespace)
+      -- kubectl get pod -n dev
+      -- kubectl delete ns dev / qa
+      -- kubectl get pod -n kube-system
+
+27. Namespace: deployment with different env
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl get namespace / kubectl get ns
+      -- kubectl create ns dev
+      -- kubectl create ns qa
+      -- kubectl apply -f 18-service-rollingupdate.yaml -n qa ( which has image with v1)
+      -- now change image from image: vinsdocker/k8s-app:v1 to image: vinsdocker/k8s-app:v2
+      -- kubectl apply -f 18-service-rollingupdate.yaml -n dev
+      -- kubectl get all -n qa
+      -- kubectl get all -n dev
+      -- kubectl port-forward svc/order-service 8080:80 -n qa
+      -- kubectl port-forward svc/order-service 8080:80 -n dev
+      -- kubectl delete ns dev
+      -- kubectl delete ns qa
