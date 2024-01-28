@@ -1,0 +1,62 @@
+1. Simple Service:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 1-simple-service.yaml
+      -- kubectl apply -f 17-simple-deployment.yaml
+      -- kubectl describe service or svc nginx
+      -- kubectl get pod -o wide
+      -- watch -t -x kubectl describe svc  nginx
+      -- kubectl delete -f 17-simple-deployment.yaml
+      -- kubectl delete -f 1-simple-service.yaml
+
+2. Service: load balancing
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 2-loadbalancing-service.yaml
+      -- kubectl exec -it demo-pod -- bash
+      -- curl my-app(service name)
+      -- we can see that load balancing works
+
+3. Service: Node Port
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 3-nodeport-service.yaml
+
+4. Service: Rolling update
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 18-service-rollingupdate.yaml
+      -- kubectl exec -it demo-pod -- bash
+      -- curl order-service
+      -- for i in {1..1000}; do curl -s http://order-service | grep -o "<title>[^<]*" | tail -c+8; done
+      -- now we are going to change image: vinsdocker/k8s-app:v1 to image: vinsdocker/k8s-app:v2 and 
+      -- kubectl apply -f 18-service-rollingupdate.yaml
+
+5. Namespace
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl get namespace / kubectl get ns
+      -- kubectl create ns dev
+      -- kubectl create ns qa
+      -- kubectl get pod -n dev / qa
+      -- kubectl apply -f 3-nodeport-service.yaml -n dev (creating resources in dev namespace)
+      -- kubectl apply -f 3-nodeport-service.yaml -n qa (creating resources in qa namespace)
+      -- kubectl get pod -n dev
+      -- kubectl delete ns dev / qa
+      -- kubectl get pod -n kube-system
+
+6. Namespace: deployment with different env
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl get namespace / kubectl get ns
+      -- kubectl create ns dev
+      -- kubectl create ns qa
+      -- kubectl apply -f 18-service-rollingupdate.yaml -n qa ( which has image with v1)
+      -- now change image from image: vinsdocker/k8s-app:v1 to image: vinsdocker/k8s-app:v2
+      -- kubectl apply -f 18-service-rollingupdate.yaml -n dev
+      -- kubectl get all -n qa
+      -- kubectl get all -n dev
+      -- kubectl port-forward svc/order-service 8080:80 -n qa
+      -- kubectl port-forward svc/order-service 8080:80 -n dev
+      -- kubectl delete ns dev
+      -- kubectl delete ns qa

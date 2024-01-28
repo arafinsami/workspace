@@ -1,0 +1,141 @@
+1. Deployment:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 17-simple-deployment.yaml
+    -- kubectl get deploy
+    -- kubectl delete -f 17-simple-deployment.yaml
+    -- kubectl get all
+    -- kubectl apply -f 17-simple-deployment.yaml
+    -- kubectl get all
+    -- kubectl apply -f 17-simple-deployment.yaml ( if we do this command instead of create command, we will not get error)
+    -- some kubectl effective commands:
+       -- kubectl get all
+       -- kubectl describe deploy
+       -- kubectl logs deploy/my-deployment
+       -- kubectl exec -it deploy/my-deployment -- bash (it automatically goes inside the pod)
+       -- kubectl port-forward deploy/my-deployment 8080:80
+
+2. More deployment:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get pod
+      -- kubectl apply -f 18-deployment-rs.yaml
+         -- we can see three replicas will be created:
+            order-service-deployment-8577ccf6b5-76nxm   1/1     Running   0          2m3s
+            order-service-deployment-8577ccf6b5-9sqzg   1/1     Running   0          2m3s
+            order-service-deployment-8577ccf6b5-xs2js   1/1     Running   0          2m3s
+         -- now if we chnage number of replicas from 3 to 4 and we will write apply command instead of create command, now can obserb:
+         -- kubectl apply -f 18-deployment-rs.yaml
+            order-service-deployment-8577ccf6b5-5pngg   1/1     Running   0          6s
+            order-service-deployment-8577ccf6b5-76nxm   1/1     Running   0          3m
+            order-service-deployment-8577ccf6b5-9sqzg   1/1     Running   0          3m
+            order-service-deployment-8577ccf6b5-xs2js   1/1     Running   0          3m
+      -- kubectl get deploy
+      -- If we change the number of replicas, it will not create new revission means new replicas. But if we chnage something on pod template,
+         it will create new revission means new replica set.
+      
+
+3. Roll out:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get pod
+      -- kubectl apply -f 19-deployment-rollout.yaml
+      -- kubectl port-forward deploy/order-service-deployment 8080:80
+      -- now change the image version from image: vinsdocker/k8s-app:v1  to image: vinsdocker/k8s-app:v2
+         -- kubectl apply -f 19-deployment-rollout.yaml
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+         -- kubectl rollout history deploy
+            -- out put will be:
+
+               REVISION  CHANGE-CAUSE
+               1         <none>
+               2         <none>
+
+      -- now change the image version from image: vinsdocker/k8s-app:v2  to image: vinsdocker/k8s-app:v3
+         -- kubectl apply -f 19-deployment-rollout.yaml
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+         -- kubectl rollout history deploy:
+            REVISION  CHANGE-CAUSE
+            1         <none>
+            2         <none>
+            3         <none>
+            -- now out current version is v3. If we want to rollout from v3 to v2:
+               -- kubectl rollout undo deploy/order-service-deployment
+               -- kubectl port-forward deploy/order-service-deployment 8080:80 and do the same thing again to check what is happening:
+                  it is now went to v3, we are not able to go out desired version.
+
+
+4. Roll back:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- doing this for v1:
+         -- kubectl apply -f 20-deployment-rollback.yaml
+         -- kubectl rollout history deploy
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+      -- doing this for v2:
+         -- kubectl apply -f 20-deployment-rollback.yaml
+         -- kubectl rollout history deploy
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+      -- doing this for v3:
+         -- kubectl apply -f 20-deployment-rollback.yaml
+         -- kubectl rollout history deploy
+         -- kubectl port-forward deploy/order-service-deployment 8080:80
+
+      -- kubectl rollout history deploy:
+         REVISION  CHANGE-CAUSE
+         1         deploying v1
+         2         deploying v2
+         3         deploying v3
+         -- here current revision is 3, if we want to go revision 1, 
+            -- kubectl rollout undo deploy/order-service-deployment --to-revision=1
+            -- if we run command again for -- kubectl rollout history deploy:
+               REVISION  CHANGE-CAUSE
+               2         deploying v2
+               3         deploying v3
+               4         deploying v1
+               -- now the current revision version is 4 which is version v1
+
+      -- to know more about roll out history:
+         -- kubectl rollout history deploy:
+            REVISION  CHANGE-CAUSE
+            3         deploying v3
+            4         deploying v1
+            5         deploying v2
+            -- kubectl rollout history deploy --revision=5
+
+
+5. Min ready deployment:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 21-min-ready-deployment.yaml
+
+6. Deployment recreate:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- we added some properties for Recreate as :
+          minReadySeconds: 10
+          strategy:
+            type: Recreate
+      -- kubectl apply -f 22-deployment-recreate.yaml
+      -- if do some changes after first department, it will not create any new pod
+
+7. Deployment max surge:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- we added some properties for Recreate as :
+          strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: "100%"
+      -- kubectl apply -f 23-deployment-max-surge.yaml
+      -- purpose of max surge, it will create duplicate pods and eventually remove the old pods
+
+
+8. Deployment max surge:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- we added some properties for Recreate as :
+          strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 0
+            maxUnavailable: 1
+      -- kubectl apply -f 24-deployment-max-unavailabe.yaml

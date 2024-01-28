@@ -1,0 +1,191 @@
+1. simple pod creation:
+-- do some docker commands:
+   -- docker ps -a
+   -- docker system prune -f
+   -- docker network ls
+-- create k8s cluster:
+   -- kind create cluster --config 01-cluster.yaml (cluster file name)
+   -- cat ~/.kube/config
+   -- kubectl version --output=json / kubectl version --output=yaml
+   -- kubectl get nodes
+   -- docker ps -a
+   -- docker exec -it container_id bash (to know inside on master node)
+      -- cd /etc/kubernetes/manifests/ to see the lists of files:
+         -- etcd.yaml
+         -- kube-apiserver.yaml
+         -- kube-controller-manager.yaml
+         -- kube-scheduler.yaml
+-- create pod:
+   -- kubectl create -f 01-simple-pod.yaml (file name)
+   -- watch -t -x kubectl get pod
+   -- kubectl describe pod
+
+
+
+2. Multiple pod creation
+-- do some docker commands:
+   -- docker ps -a
+   -- docker system prune -f
+   -- docker network ls
+-- create k8s cluster:
+   -- kind create cluster --config 01-cluster.yaml (cluster file name)
+   -- cat ~/.kube/config
+   -- kubectl version --output=json / kubectl version --output=yaml
+   -- kubectl get nodes
+   -- docker ps -a
+   -- docker exec -it container_id bash (to know inside on master node)
+      -- cd /etc/kubernetes/manifests/ to see the lists of files:
+         -- etcd.yaml
+         -- kube-apiserver.yaml
+         -- kube-controller-manager.yaml
+         -- kube-scheduler.yaml
+-- create pod:
+   -- kubectl create -f 02-multiple-pod.yaml (file name)
+   -- watch -t -x kubectl get pod
+   -- descripe pod (query)
+      -- kubectl describe pod (very confusing, because all pod info will come)
+      -- kubectl get pod (all pod status will come)
+      -- kubectl get pod --show-labels (show all pod with pod labels)
+      -- kubectl get pod my-pod-1 (we are calling by pod name to know perticular pod status)
+      -- kubectl describe pod my-pod-1( query using pod name)
+      -- kubectl get pod -l department=department-1 (getting specific pod by it's labels)
+      -- kubectl get pod -l team=team-1 (getting specific pod by it's labels)
+      -- kubectl get pod -l team!=team-1 (getting lists of pods not from team-1  by labels)
+      -- kubectl get pod -l department=department-1,team=team-1  (query to find a pod using and oprator)
+      -- kubectl get pod -o wide (to get info which pod is running for which node)
+      -- kubectl get pod my-pod-1 -o yaml (to get pod info or config as yaml format)
+      -- kubectl get pod my-pod-1 -o json (to get pod info or config as json format)
+      -- kubectl delete pod my-pod-1 ( to delete specific pod)
+      -- kubectl delete -f 02-multiple-pod.yaml (deleting all pods)
+      -- docker stop container_id
+      -- docker ps -a
+      -- docker system prune -f
+      -- docker network ls
+
+
+3. Port forwarding:
+-- do some docker commands:
+   -- docker ps -a
+   -- docker system prune -f
+   -- docker network ls
+-- create k8s cluster:
+   -- kind create cluster --config 01-cluster.yaml (cluster file name)
+   -- cat ~/.kube/config
+   -- kubectl version --output=json / kubectl version --output=yaml
+   -- kubectl get nodes
+   -- docker ps -a
+   -- docker exec -it container_id bash (to know inside on master node)
+      -- cd /etc/kubernetes/manifests/ to see the lists of files:
+         -- etcd.yaml
+         -- kube-apiserver.yaml
+         -- kube-controller-manager.yaml
+         -- kube-scheduler.yaml
+-- create pod:
+   -- kubectl create -f 03-pod-port-forwarding.yaml (file name)
+   -- watch -t -x kubectl get pod
+   -- kubectl describe pod
+   -- kubectl port-forward my-pod 8080:80
+
+4. Pod args:
+   -- docker run ubuntu
+   -- docker run ubuntu date
+   -- docker run ubuntu ls
+   -- kubectl create -f 05-pod-args.yaml
+   -- kubectl get pod my-pod
+   -- kubectl logs my-pod
+
+5. Pod shell args:
+   -- docker run -it ubuntu (running as interective mode)
+   -- date
+   -- echo this is my path: $PATH
+   -- /bin/sh -c 'echo this is my path: $PATH'
+   -- now create pod in k8s cluster
+      -- kubectl create -f 06-pod-shell.yaml
+      -- kubectl get pod my-pod
+      -- kubectl logs my-pod
+
+6. Pod termination grace period:
+   -- create pod in k8s cluster
+      -- kubectl create -f 07-pod-termination-grace-period.yaml
+      -- kubectl delete -f 07-pod-termination-grace-period.yaml, it will takes 30 seconds, it will goes sleep for 30 seconds and status showing Terminating
+
+
+7. Pod command: If we want to override the entrypoint, we can use command in k8s
+   -- create pod in k8s cluster
+   -- docker run vinsdocker/k8s-entrypoint, we will get some message
+   -- if we want to override this message as docker run vinsdocker/k8s-entrypoint date, we do not get output
+   -- we can do it using k8s command to chage the existing message as:
+      -- kubectl create -f 08-pod-command.yaml
+      -- kubectl get pod my-pod
+      -- kubectl logs my-pod : we will override the message and we will get date instead of docker container message
+
+
+8. Pod pass env variables:
+   -- create pod in k8s cluster
+   -- docker run vinsdocker/k8s-entrypoint, we will get some message
+   -- if we want to override this message as docker run vinsdocker/k8s-entrypoint date, we do not get output
+   -- we can do it using k8s command to chage the existing message as:
+      -- kubectl create -f 08-pod-command.yaml
+      -- kubectl get pod my-pod
+      -- kubectl logs my-pod : we will override the message and we will get date instead of docker container message
+
+09-pod-pass-env-variables.yaml
+   -- create pod in k8s cluster
+   -- kubectl create -f 09-pod-pass-env-variables.yaml
+   -- kubectl get pod my-pod
+   -- kubectl logs my-pod
+      -- we will get following as output:
+         PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+         HOSTNAME=my-pod
+         reuqest.timeout=10ms
+         spring.profiles.active=dev
+         KUBERNETES_PORT_443_TCP_PORT=443
+         KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+         KUBERNETES_SERVICE_HOST=10.96.0.1
+         KUBERNETES_SERVICE_PORT=443
+         KUBERNETES_SERVICE_PORT_HTTPS=443
+         KUBERNETES_PORT=tcp://10.96.0.1:443
+         KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+         KUBERNETES_PORT_443_TCP_PROTO=tcp
+         HOME=/root
+
+10. Exploring pod:
+    -- create pod in k8s cluster
+    -- kubectl create -f 01-simple-pod.yaml
+    -- kubectl get pod my-pod
+    -- kubectl exec -it my-pod bash / kubectl exec -it my-pod -- bash
+    -- ls
+    -- curl localhost
+    -- to exit: write exit command
+
+
+11. Pod Multiple
+    -- create pod in k8s cluster
+    -- kubectl create -f 10-pod-multiple-containers-1.yaml
+    -- kubectl logs my-pod
+    -- kubectl logs my-pod -c nginx
+    -- kubectl logs my-pod -c tomcat
+    -- kubectl describe pod
+    -- kubectl describe pod my-pod
+    -- kubectl describe -f 10-pod-multiple-containers-1.yaml
+    -- kubectl get ev |grep my-pod|grep nginx
+    -- kubectl get ev |grep my-pod|grep tomcat
+    -- kubectl get pod my-pod -o yaml
+    -- kubectl get pod my-pod -o json
+
+
+12. Pod Assignment
+    -- kind create cluster --config 01-cluster.yaml
+    -- kubectl create -f 11-pod-assignment.yaml
+    -- kubectl describe pod
+    -- kubectl logs my-pod
+       -- we will get following error. We need to fix the error
+          -- output as:
+             -- You need to do the followings to make this work
+                  -- Set an environment variable 'NUMBER' with the value 5
+                  -- Pass the arg 'MY_ARG'
+
+    -- kubectl delete -f 11-pod-assignment.yaml
+    -- kubectl create -f 12-pod-assignment-solution.yaml
+    -- kubectl describe pod
+    -- kubectl logs pod-assignment

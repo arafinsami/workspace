@@ -1,0 +1,110 @@
+1. Probes- Start Up Probes:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 01-startup-httpGet.yaml
+      -- kubectl describe pod
+      -- kubectl delete -f 01-startup-httpGet.yaml
+
+2. Probes- tcp Socket:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 02-startup-tcpSocket.yaml, here we assigned mongo port as 27018 and it will be failed, we just tested tcpSocket port
+      -- kubectl describe pod
+      -- kubectl delete -f 02-startup-tcpSocket.yaml
+      -- after that we edited the tcpSocket as "27017" with that yaml file and applied command again as 
+        "kubectl apply -f 02-startup-tcpSocket.yaml"
+
+
+3. Probes- Start Up Exec:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 03-startup-exec.yaml
+      -- kubectl describe pod
+      -- kubectl delete -f 03-startup-exec.yaml
+
+4. Probes- Liveness Probes:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 04-liveness-probes.yaml
+      -- kubectl describe pod
+      -- kubectl exec -it my-pod -- bash
+      -- cd /usr/share/nginx/html/
+      -- we can see these files: 50x.html  index.html  live.html  ready.html
+      -- if we do : rm live.html, then it will satrt from startupProbe
+      -- kubectl delete -f 04-liveness-probes.yaml
+
+5. Probes- Readiness Probes:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 05-readiness-probe.yaml
+      -- kubectl describe pod
+      -- kubectl exec -it my-pod -- bash
+      -- cd /usr/share/nginx/html/
+      -- we can see these files: 50x.html  index.html  live.html  ready.html
+      -- if we do : rm ready.html, then it will not call satrt or liveness, means it is not ready to serve the reuqest
+      -- now again, I put my command as : touch ready.html, now it is ready to serve the reuqest
+      -- kubectl delete -f 05-readiness-probe.yaml
+
+6. Probes- Readiness Probes with Service:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 06-readiness-probe-with-service.yaml
+      -- kubectl get svc
+      -- watch -t -x kubectl describe svc my-app (open a new terminal)
+               Name:              my-app
+               Namespace:         default
+               Labels:            <none>
+               Annotations:       <none>
+               Selector:          app=my-app
+               Type:              ClusterIP
+               IP Family Policy:  SingleStack
+               IP Families:       IPv4
+               IP:                10.96.99.105
+               IPs:               10.96.99.105
+               Port:              <unset>  80/TCP
+               TargetPort:        80/TCP
+               Endpoints:         10.244.2.6:80
+               Session Affinity:  None
+               Events:            <none>
+      -- kubectl get pod -o wide ( confirmed that our pod is running)
+               NAME     READY   STATUS    RESTARTS   AGE    IP           NODE                  NOMINATED NODE   READINESS GATES
+               my-pod   1/1     Running   0          4m2s   10.244.2.6   dev-cluster-worker2   <none>           <none>
+         here we can see that our pod is ruiing under  IP : 10.244.2.6
+
+      -- kubectl exec -it my-pod -- bash
+      -- cd /usr/share/nginx/html/
+      -- we can see these files: 50x.html  index.html  live.html  ready.html
+      -- if we do : rm ready.html, then it will not call satrt or liveness, means it is not ready to serve the reuqest
+         We can see that service Endpoints IP removed:
+               Name:              my-app
+               Namespace:         default
+               Labels:            <none>
+               Annotations:       <none>
+               Selector:          app=my-app
+               Type:              ClusterIP
+               IP Family Policy:  SingleStack
+               IP Families:       IPv4
+               IP:                10.96.99.105
+               IPs:               10.96.99.105
+               Port:              <unset>  80/TCP
+               TargetPort:        80/TCP
+               Endpoints:
+               Session Affinity:  None
+               Events:            <none>
+      -- now again, I put my command as : touch ready.html, now service Endpoints come again.
+               Name:              my-app
+               Namespace:         default
+               Labels:            <none>
+               Annotations:       <none>
+               Selector:          app=my-app
+               Type:              ClusterIP
+               IP Family Policy:  SingleStack
+               IP Families:       IPv4
+               IP:                10.96.99.105
+               IPs:               10.96.99.105
+               Port:              <unset>  80/TCP
+               TargetPort:        80/TCP
+               Endpoints:         10.244.2.6:80
+               Session Affinity:  None
+               Events:            <none>
+      -- kubectl delete -f 06-readiness-probe-with-service.yaml

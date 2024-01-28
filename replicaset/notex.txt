@@ -1,0 +1,48 @@
+13. ReplicaSet:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 13-simple-rs.yaml 
+    -- kubectl get all
+    -- kubectl get pod --show-labels
+    -- kubectl delete pod/my-rs-xnkws(so another pod will be created immediately by ReplicaSet)
+    -- kubectl delete pod --all(all pods will be deleted and all pods will be created immediately by ReplicaSet)
+
+14. ReplicaSet-Multiple Pod labels:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 14-simple-rs-pod-multiple-labels.yaml 
+    -- kubectl get all
+    -- kubectl get pod --show-labels
+    -- kubectl delete pod/my-rs-xnkws(so another pod will be created immediately by ReplicaSet)
+    -- kubectl delete pod --all(all pods will be deleted and all pods will be created immediately by ReplicaSet)
+
+
+1. RS with multiple pods with samle labels:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 15-2-rs-existing-multiple-pod.yaml
+       -- 3 pods will be created
+    -- kubectl create -f 15-1-existing-pod-makager.yaml
+       -- it will terminate 1 pod and 2 pods will run
+
+2. Multiple RS:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 16-multiple-rs.yaml
+
+3. Describe rs:
+    -- kind create cluster --config 01-cluster.yaml
+    -- watch -t -x kubectl get pod
+    -- kubectl create -f 16-multiple-rs.yaml
+    -- My current pods are running as :
+         my-rs-1-8snfk   1/1     Running   0          2m21s
+         my-rs-1-sgtxv   1/1     Running   0          2m21s
+         my-rs-2-fb5rd   1/1     Running   0          2m21s
+         my-rs-2-j7qvk   1/1     Running   0          2m21s
+         -- we can also describe each of pod as follows:
+            -- kubectl describe pod my-rs-1-8snfk
+            -- kubectl describe pod my-rs-1-sgtxv
+            -- kubectl describe pod my-rs-2-fb5rd
+            -- kubectl describe pod my-rs-2-j7qvk
+    -- kubectl describe rs/my-rs-1
+    -- kubectl describe rs/my-rs-2

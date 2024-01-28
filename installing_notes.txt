@@ -1,0 +1,40 @@
+Installing:
+1. https://kubernetes.io/docs/tasks/tools/ --> install kubectl
+2. https://kind.sigs.k8s.io/docs/user/quick-start/ ---> install kind
+
+
+1. First install kubectl
+   -- kubectl version --output=yaml
+   -- kubectl version --output=json
+2. install kind
+     -- kind version
+     -- creating cluster: 
+        -- https://kind.sigs.k8s.io/docs/user/quick-start/
+        -- check if the cluster is exist : docker ps -a
+        -- docker stop container_id
+        -- to clean everything: docker system prune -f
+        -- check what network available: sudo docker network ls
+        -- kind create cluster --config 01-cluster.yaml
+        -- docker ps -a
+        -- docker network ls
+        --  go home directory and write: cat ~/.kube/config
+        -- kubectl version --output=json
+        -- kubectl get nodes
+        -- now to know inside on master node: docker exec -it container_id bash
+        -- cd /etc/kubernetes/manifests/  so that we can see four files:
+           1. etcd.yaml  2. kube-apiserver.yaml	3. kube-controller-manager.yaml  4. kube-scheduler.yaml
+           -- to see all running process: ps -aux
+        -- kind delete cluster --name dev-cluster
+
+
+POD:
+-- pod is basic building block to create a workload
+-- watch -t -x kubectl get pod
+-- kubectl create -f 01-simple-pod.yaml
+-- kubectl delete -f 01-simple-pod.yaml
+-- kubectl describe pod
+-- kubectl apply -f 01-simple-pod.yaml ( to update the pod)
+-- kubectl get pod pod-1(pod name), kubectl describe pod pod-1(pod name), kubectl get pod --show-labels, kubectl get pod -l department=department-1 (comes with label name), kubectl get pod -l department=department-1,team=team-1(comes with label name)
+-- kubectl get pod -o wide
+-- kubectl get pod pod-1 -o yaml(get out put as yaml format)
+-- kubectl port-forwarding pod-1(pod name) 80:80
