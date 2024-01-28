@@ -598,3 +598,187 @@ POD:
                Session Affinity:  None
                Events:            <none>
       -- kubectl delete -f 06-readiness-probe-with-service.yaml
+
+34. Config Map:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 01-simple-config-map.yaml
+      -- we can see that no pod is created as it contains configuration
+         NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+         service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   5m12s
+      -- to get config map, we will write command as : kubectl get configmap or cm
+         NAME               DATA   AGE
+         app-properties     2      102s
+         kube-root-ca.crt   1      6m6s
+      -- To access config map properties, we will write: kubectl describe cm app-properties, we will see the result as follows: 
+         Name:         app-properties
+         Namespace:    default
+         Labels:       <none>
+         Annotations:  <none>
+
+         Data
+         ====
+         appUrl:
+         ----
+         http://my-app-service
+         timeout:
+         ----
+         30
+
+         BinaryData
+         ====
+
+         Events:  <none>
+      -- kubectl delete -f 01-simple-config-map.yaml
+
+
+35. Injecting Config Map into Pod-1:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 02-injecting_config_map_into_pod-1.yaml
+      -- kubectl get pod
+      -- kubectl logs my-pod, we can see that our configs are injected into pod
+
+         PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+         HOSTNAME=my-pod
+         request.timeout=30
+         application.url=http://my-app-service
+         KUBERNETES_SERVICE_PORT_HTTPS=443
+         KUBERNETES_PORT=tcp://10.96.0.1:443
+         KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+         KUBERNETES_PORT_443_TCP_PROTO=tcp
+         KUBERNETES_PORT_443_TCP_PORT=443
+         KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+         KUBERNETES_SERVICE_HOST=10.96.0.1
+         KUBERNETES_SERVICE_PORT=443
+         HOME=/root
+
+      -- kubectl delete -f 02-injecting_config_map_into_pod-1.yaml
+
+
+36. Injecting Config Map into Pod-1:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl apply -f 03-injecting_config_map_into_pod-2.yaml
+      -- kubectl get pod
+      -- kubectl logs my-pod, we can see that our configs are injected into pod
+
+         PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+         HOSTNAME=my-pod
+         appUrl=http://my-app-service
+         timeout=30
+         KUBERNETES_PORT_443_TCP_PORT=443
+         KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+         KUBERNETES_SERVICE_HOST=10.96.0.1
+         KUBERNETES_SERVICE_PORT=443
+         KUBERNETES_SERVICE_PORT_HTTPS=443
+         KUBERNETES_PORT=tcp://10.96.0.1:443
+         KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+         KUBERNETES_PORT_443_TCP_PROTO=tcp
+         HOME=/root
+         
+      -- kubectl delete -f 03-injecting_config_map_into_pod-2.yaml
+
+37. Injecting Config Map file into Pod-1:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl get cm
+      -- kubectl get cm kube-root-ca.crt -o yaml  , we will get output as follows:
+            apiVersion: v1
+            data:
+            ca.crt: |
+               -----BEGIN CERTIFICATE-----
+               MIIC/jCCAeagAwIBAgIBADANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwprdWJl
+               cm5ldGVzMB4XDTI0MDEyODE3MzIxNFoXDTM0MDEyNTE3MzIxNFowFTETMBEGA1UE
+               AxMKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOr7
+               ny5TfB8ueo+lZi+va+ua2wdAiK7PGDd013mNqQEeDfUKaJTb3g8xC/2/qRSdoUjg
+               uK2WN0fAlMQQ/3H/D4B3/95LSxClXOXZsxu0zeqgoWg7z6m+rK7E264eSi3DTrDq
+               ZezcF13VNUiTMl8SmExt8Np6lKsZ/o9u6Y5DSsUPdB2Sl0Z4IzDufmmwqG4axHSb
+               7xcCtzNhZuXKnfX1JrevhyyNyxkhm/mkcc0ynZv5/T5YWvKWPl7d1kmhvYDU2/3r
+               vuHGrBMtvPx5Ufd941DlGYVYY8qZv8Q478jIe1PcEHuCsAWs9h30D6bsYbR1rL5A
+               Ajxx8ra4PRx/tN+TsK8CAwEAAaNZMFcwDgYDVR0PAQH/BAQDAgKkMA8GA1UdEwEB
+               /wQFMAMBAf8wHQYDVR0OBBYEFHLV/yTENTk7Tu+vgzOT3n5CJOOxMBUGA1UdEQQO
+               MAyCCmt1YmVybmV0ZXMwDQYJKoZIhvcNAQELBQADggEBAIqoWB88eNm1IK9rHktR
+               kddyv42vCNLo/c9mwpsCohUfkB91JbS5OKTV/Joc+soUEXVzEueYA1gRk6hghZrr
+               bzeHMd/ac6ZQm3+xGoL0x0OczoDVRUhyxPcEz4aLZzjo8t3YtkNOj17xJSjE/9Ng
+               CYlFgFUmQhv8lviWt6UnPaObHAeVyPJ8CUpKz0YClDc0/Kx4uMHRxzfru5qvEiPn
+               GrYdVkfaMXiJDGAwy+DD5eFz5YWMKQe77U50nOfzhX4I4w9giKyxA3Mw0yUgknKH
+               J/pFmpFVrQUQrr6S52zyZMnZxUFsJq4imEz5kcR/eezfd+1J/5xDz9AjQw8UzDpb
+               snA=
+               -----END CERTIFICATE-----
+            kind: ConfigMap
+            metadata:
+            annotations:
+               kubernetes.io/description: Contains a CA bundle that can be used to verify the
+                  kube-apiserver when using internal endpoints such as the internal service IP
+                  or kubernetes.default.svc. No other usage is guaranteed across distributions
+                  of Kubernetes clusters.
+            creationTimestamp: "2024-01-28T17:32:36Z"
+            name: kube-root-ca.crt
+            namespace: default
+            resourceVersion: "349"
+            uid: 6bed3123-00d8-495b-ba6d-32e0ec1090f5
+
+      -- kubectl apply -f 04-injecting_config_map_file_into_pod-1.yaml
+      -- kubectl get cm, we will get output as :
+         NAME               DATA   AGE
+         app-properties     1      17s
+         kube-root-ca.crt   1      93m
+      -- kubectl get cm app-properties -o yaml, we will get output as :
+         apiVersion: v1
+         data:
+         application.properties: |
+            appUrl=http://my-app-service
+            timeout=30
+            myKeys=fkjkjsakj
+            username=arafin
+         kind: ConfigMap
+         metadata:
+         annotations:
+            kubectl.kubernetes.io/last-applied-configuration: |
+               {"apiVersion":"v1","data":{"application.properties":"appUrl=http://my-app-service\ntimeout=30\nmyKeys=fkjkjsakj\nusername=arafin\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"app-properties","namespace":"default"}}
+         creationTimestamp: "2024-01-28T19:05:39Z"
+         name: app-properties
+         namespace: default
+         resourceVersion: "8953"
+         uid: 595e69cc-ea97-4005-9e9d-2f8f9be6c832
+   -- kubectl delete -f 04-injecting_config_map_file_into_pod-1.yaml
+
+38. Injecting Config Map file into Pod-2:
+      -- kind create cluster --config 01-cluster.yaml
+      -- watch -t -x kubectl get all
+      -- kubectl get pod
+      -- kubectl get cm
+      -- kubectl apply -f 05-injecting_config_map_file_into_pod-2.yaml
+      -- kubectl get cm, we will get output as :
+         NAME               DATA   AGE
+         app-properties     1      17s
+         kube-root-ca.crt   1      93m
+      -- kubectl get cm app-properties -o yaml, we will get output as :
+         apiVersion: v1
+         data:
+         application.properties: |
+            appUrl=http://my-app-service
+            timeout=30
+            myKeys=fkjkjsakj
+            username=arafin
+         kind: ConfigMap
+         metadata:
+         annotations:
+            kubectl.kubernetes.io/last-applied-configuration: |
+               {"apiVersion":"v1","data":{"application.properties":"appUrl=http://my-app-service\ntimeout=30\nmyKeys=fkjkjsakj\nusername=arafin\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"app-properties","namespace":"default"}}
+         creationTimestamp: "2024-01-28T19:26:11Z"
+         name: app-properties
+         namespace: default
+         resourceVersion: "10802"
+         uid: 46acb12f-0add-4bf9-a620-80a8385b7db8
+
+      -- kubectl exec -it my-pod -- bash
+      -- cd usr/share/props/ and if we wtire simple linux command as ls, we will see our properties file created
+      -- now we write : cat application.properties
+         appUrl=http://my-app-service
+         timeout=30
+         myKeys=fkjkjsakj
+         username=arafin
+      
+      -- kubectl delete -f 05-injecting_config_map_file_into_pod-2.yaml
